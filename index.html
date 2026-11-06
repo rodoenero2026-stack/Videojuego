@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cyber Escape Room: La Brecha</title>
+  <!-- Fuentes de Google Fonts con carga no bloqueante y respaldo local sin internet -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  </noscript>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <!-- Atmósfera Cyberpunk -->
+  <div class="cyber-grid" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div id="glitch-overlay" class="glitch-overlay hidden" aria-hidden="true"></div>
+
+  <!-- Contenedor Principal -->
+  <div id="game-app" class="game-app theme-cyan">
+
+    <!-- ================= HUD MÍNIMO (SOLO VIDAS, PUNTOS Y PISTA) ================= -->
+    <header id="game-hud" class="hud hidden" aria-label="Estado del juego">
+      <!-- Izquierda: Vidas -->
+      <div class="hud-section hud-integrity">
+        <div class="hud-label">
+          <span>VIDAS</span>
+          <span id="integrity-text" class="mono-text">3 / 3</span>
+        </div>
+        <div class="integrity-bar-wrapper" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="3">
+          <div id="integrity-bar-fill" class="integrity-bar-fill"></div>
+          <div class="integrity-segments">
+            <span class="segment"></span>
+            <span class="segment"></span>
+            <span class="segment"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Centro: Habitación Actual y Dificultad -->
+      <div class="hud-section hud-center">
+        <div id="hud-room-title" class="hud-room-badge">NIVEL 1: OFICINA (PHISHING)</div>
+        <span id="hud-difficulty" class="hud-difficulty-badge mono-text" title="Dificultad actual">NORMAL (x1)</span>
+      </div>
+
+      <!-- Derecha: Puntos, Pista, Pausa y Sonido -->
+      <div class="hud-section hud-right">
+        <div class="hud-stat">
+          <span class="stat-label">PUNTOS</span>
+          <span id="hud-score" class="stat-value mono-text">0</span>
+        </div>
+        <button id="btn-hint" class="cyber-btn btn-small btn-hint" type="button" title="Ver una pista (-25 puntos)">
+          💡 Pista (-25)
+        </button>
+        <button id="btn-pause" class="cyber-btn btn-small btn-pause" type="button" aria-label="Pausar juego (P o Esc)" title="Pausar juego (P o Esc)">
+          ⏸ Pausa
+        </button>
+        <button id="btn-audio" class="cyber-btn btn-icon" type="button" aria-label="Activar o silenciar sonido" title="Sonido">
+          🔊
+        </button>
+      </div>
+    </header>
+
+    <!-- ================= PANTALLA DE INICIO ================= -->
+    <main id="screen-start" class="screen active">
+      <div class="hero-card cyber-panel">
+        <div class="cyber-tag">VIDEOJUEGO 2D DE CIBERSEGURIDAD</div>
+        <h1 class="game-title">
+          CYBER ESCAPE ROOM<br><span class="title-highlight">LA BRECHA</span>
+        </h1>
+        <p class="hero-desc">
+          Controla al <strong>Auditor</strong>, esquiva los ataques del villano <strong>BRECHA</strong> y resuelve los retos de seguridad en las 3 habitaciones para escapar.
+        </p>
+
+        <!-- 3 Pasos Visibles: Investiga, Detecta, Defiende -->
+        <div class="steps-grid" aria-label="Pasos para jugar">
+          <div class="step-card step-cyan">
+            <span class="step-num">PASO 1</span>
+            <strong>🔍 Investiga</strong>
+            <small>Camina con WASD/Flechas y habla con los NPCs usando la tecla E.</small>
+          </div>
+          <div class="step-card step-magenta">
+            <span class="step-num">PASO 2</span>
+            <strong>⚠️ Detecta</strong>
+            <small>Esquiva los ataques enemigos y recoge las piezas de defensa.</small>
+          </div>
+          <div class="step-card step-violet">
+            <span class="step-num">PASO 3</span>
+            <strong>🛡️ Defiende</strong>
+            <small>Consigue las claves PHISH, SQLSAFE y ACCESS para escapar.</small>
+          </div>
+        </div>
+
+        <!-- Selector de Dificultad (Fácil, Normal, Difícil) -->
+        <div class="difficulty-selector" role="group" aria-label="Seleccionar dificultad">
+          <div class="difficulty-label mono-text">SELECCIONA DIFICULTAD:</div>
+          <div class="difficulty-options">
+            <button type="button" class="cyber-btn diff-btn" data-dificultad="facil" aria-pressed="false">
+              🟢 Fácil
+            </button>
+            <button type="button" class="cyber-btn diff-btn active" data-dificultad="normal" aria-pressed="true">
+              🔵 Normal
+            </button>
+            <button type="button" class="cyber-btn diff-btn" data-dificultad="dificil" aria-pressed="false">
+              🔴 Difícil
+            </button>
+          </div>
+          <p id="difficulty-summary" class="difficulty-summary mono-text">
+            3 Vidas (+1 por nivel) • Enemigos estándar • Pista: -25 pts • Puntos: x1
+          </p>
+        </div>
+
+        <div class="hero-actions">
+          <button id="btn-start-game" class="cyber-btn btn-primary btn-large" type="button">
+            ▶ Iniciar juego
+          </button>
+          <button id="btn-open-instructions" class="cyber-btn btn-secondary btn-large" type="button">
+            📖 Instrucciones
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- ================= MODAL DE INSTRUCCIONES ================= -->
+    <section id="modal-instructions" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="inst-title">
+      <div class="modal-card cyber-panel">
+        <div class="modal-header">
+          <h2 id="inst-title">📖 Instrucciones del juego</h2>
+          <button id="btn-close-instructions" class="cyber-btn btn-icon" type="button" aria-label="Cerrar">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="inst-grid">
+            <div class="inst-box">
+              <h3>🕹️ Movimiento (WASD o Flechas)</h3>
+              <p>Mueve al Auditor por la habitación en vista 2D desde arriba. Cuando estés cerca de un personaje u objeto, presiona la tecla <strong>E</strong>.</p>
+            </div>
+            <div class="inst-box">
+              <h3>❤️ Vidas y Dificultad</h3>
+              <p>Elige <strong>Fácil (5 vidas, x0.8)</strong>, <strong>Normal (3 vidas, x1)</strong> o <strong>Difícil (2 vidas, x1.5)</strong>. Cada fallo resta 1 vida y 50 puntos.</p>
+            </div>
+            <div class="inst-box">
+              <h3>⭐ Puntos, Pistas y Pausa</h3>
+              <p>Puntuación máxima de <strong>1000 puntos</strong>. Usa <strong>Pista (-10/-25/-50 pts)</strong> o presiona <strong>P / Esc</strong> para pausar.</p>
+            </div>
+            <div class="inst-box">
+              <h3>🔑 Claves y Escape</h3>
+              <p>Obtén las claves <code>PHISH</code> (Nivel 1), <code>SQLSAFE</code> (Nivel 2) y <code>ACCESS</code> (Nivel 3) derrotando a BRECHA.</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-close-instructions-bottom" class="cyber-btn btn-primary" type="button">Entendido</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ESCENARIO JUGABLE 2D EN CANVAS (LOS 3 NIVELES) ================= -->
+    <main id="screen-level-1" class="screen hidden">
+      <div class="room-layout">
+
+        <!-- Un solo objetivo en una frase corta y clara -->
+        <div class="mission-banner cyber-panel">
+          <p id="mission-objective-text" class="mission-single-line">
+            <strong>Objetivo:</strong> Esquiva los bots, presiona <strong>E</strong> en la 💻 Terminal para reportar los <strong>2 correos falsos</strong> y cruza la puerta.
+          </p>
+          <span class="mission-counter mono-text">
+            <span id="mission-counter-label">Correos sospechosos:</span> <strong id="l1-phish-counter">0 / 2</strong>
+          </span>
+        </div>
+
+        <!-- Escenario Jugable 2D Top-Down -->
+        <div class="canvas-wrapper cyber-panel">
+          <canvas id="game-canvas" width="960" height="520"></canvas>
+          <div class="controls-bar mono-text">
+            <span>🕹️ <strong>WASD / Flechas:</strong> Caminar</span>
+            <span>⚡ <strong>Tecla E:</strong> Hablar / Recoger / Usar consola</span>
+            <span>⏸️ <strong>P / Esc:</strong> Pausa</span>
+            <span>🛡️ <strong>Esquiva:</strong> Bots, Drones y Ataques de BRECHA</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ================= MODAL NIVEL 1: TERMINAL DE CORREOS (4 CORREOS) ================= -->
+    <section id="modal-email-client" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="email-client-title">
+      <div class="modal-card modal-xl cyber-panel">
+        <div class="modal-header">
+          <div class="header-title-group">
+            <h2 id="email-client-title">💻 Terminal de Correo (4 correos)</h2>
+            <span class="badge-counter mono-text" id="email-modal-counter">Correos falsos: 0 / 2</span>
+          </div>
+          <div class="header-Controls">
+            <button id="btn-toggle-magnifier" class="cyber-btn btn-small btn-magnifier" type="button">
+              🔍 Usar lupa: <span id="magnifier-state-text">NO</span>
+            </button>
+            <button id="btn-close-email" class="cyber-btn btn-icon" type="button" aria-label="Cerrar">✕</button>
+          </div>
+        </div>
+
+        <div class="email-client-body">
+          <aside class="email-list-pane" aria-label="Lista de correos">
+            <div class="pane-subtitle">BANDEJA DE ENTRADA (4)</div>
+            <ul id="email-list" class="email-list"></ul>
+          </aside>
+
+          <section class="email-detail-pane" aria-label="Detalle del correo">
+            <div id="email-detail-content" class="email-detail-content"></div>
+
+            <div id="forensic-lens-panel" class="forensic-lens-panel hidden">
+              <div class="lens-header">🔍 LO QUE DESCUBRE LA LUPA:</div>
+              <div id="forensic-lens-grid" class="forensic-lens-grid"></div>
+            </div>
+
+            <div class="email-actions-bar">
+              <button id="btn-mark-safe" class="cyber-btn btn-secondary" type="button">
+                ✓ Es un correo seguro
+              </button>
+              <button id="btn-report-phishing" class="cyber-btn btn-danger" type="button">
+                🚨 Reportar como Phishing
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MODAL NIVEL 2: CONSOLA DEL SERVIDOR SQL ================= -->
+    <section id="modal-sql-server" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="sql-modal-title">
+      <div class="modal-card modal-xl cyber-panel">
+        <div class="modal-header">
+          <div class="header-title-group">
+            <h2 id="sql-modal-title">🖥️ Consola del Servidor SQL — Parche de Seguridad</h2>
+            <span class="badge-counter mono-text" id="sql-modal-counter">Bloques colocados: 0 / 3</span>
+          </div>
+          <button id="btn-close-sql" class="cyber-btn btn-icon" type="button" aria-label="Cerrar">✕</button>
+        </div>
+
+        <div class="modal-body sql-console-body">
+          <div class="sql-vuln-box">
+            <div class="sql-section-title">1. Código vulnerable actual (Concatenación directa):</div>
+            <pre class="sql-code-preview mono-text" id="sql-vulnerable-code">SELECT * FROM usuarios WHERE usuario = '$usuario'</pre>
+            <div class="sql-demo-row">
+              <span id="sql-exploit-status" class="mono-text text-red">⚠️ Si un atacante escribe <code>' OR '1'='1</code> entra sin contraseña.</span>
+              <button id="btn-test-sqli" class="cyber-btn btn-small btn-secondary" type="button">
+                ⚡ Simular ataque ' OR '1'='1
+              </button>
+            </div>
+          </div>
+
+          <div class="sql-patch-box">
+            <div class="sql-section-title">2. Arma la Consulta Parametrizada (Haz clic en los 3 bloques en orden):</div>
+            <div id="sql-slots-container" class="sql-slots-container mono-text"></div>
+            <div id="sql-blocks-inventory" class="sql-blocks-inventory"></div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-reset-sql-slots" class="cyber-btn btn-small" type="button">↺ Reiniciar orden</button>
+          <button id="btn-close-sql-bottom" class="cyber-btn btn-primary" type="button">Volver al mapa</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MODAL NIVEL 3: CONSOLA DEL ESCUDO DE AUTENTICACIÓN Y MFA ================= -->
+    <section id="modal-auth-shield" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+      <div class="modal-card modal-xl cyber-panel">
+        <div class="modal-header">
+          <div class="header-title-group">
+            <h2 id="auth-modal-title">🛡️ Escudo de Autenticación — Defensa contra BRECHA</h2>
+            <span class="badge-counter mono-text" id="auth-modal-counter">Piezas recolectadas: 0 / 4</span>
+          </div>
+          <button id="btn-close-auth" class="cyber-btn btn-icon" type="button" aria-label="Cerrar">✕</button>
+        </div>
+
+        <div class="modal-body sql-console-body">
+          <!-- Parte 1: Elegir Contraseña Fuerte con Medidor de Crackeo -->
+          <div class="sql-vuln-box">
+            <div class="sql-section-title">Paso 1: ¿Cuál es la contraseña más segura para proteger el sistema?</div>
+            <div id="auth-password-grid" class="sql-blocks-inventory"></div>
+            <div class="crack-meter-bar mono-text" id="crack-meter-status">
+              ⏱️ Tiempo estimado para romperla por Fuerza Bruta: <strong>Selecciona una contraseña</strong>
+            </div>
+          </div>
+
+          <!-- Parte 2: Celular MFA en vivo + Medida adicional -->
+          <div class="sql-patch-box">
+            <div class="sql-section-title">Paso 2: ¿Qué medida adicional debes activar con tu Celular MFA?</div>
+            <div class="mfa-layout-row">
+              <!-- Dispositivo Celular con código que cambia cada 30s -->
+              <div class="mfa-phone-card mono-text">
+                <div class="phone-header">📱 TOKEN MFA UNACH</div>
+                <div id="mfa-live-code" class="phone-code">🔒 RECOGE EL CELULAR</div>
+                <div class="phone-timer">Cambia en: <span id="mfa-seconds-left">30</span>s</div>
+              </div>
+
+              <!-- Opciones de medida adicional -->
+              <div id="auth-mfa-options" class="mfa-options-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-close-auth-bottom" class="cyber-btn btn-primary" type="button">Volver al mapa</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MODAL DE USB TRAMPA / OBJETOS ================= -->
+    <section id="modal-object" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="obj-modal-title">
+      <div class="modal-card cyber-panel">
+        <div class="modal-header">
+          <h2 id="obj-modal-title">Objeto</h2>
+          <button id="btn-close-obj-modal" class="cyber-btn btn-icon" type="button" aria-label="Cerrar">✕</button>
+        </div>
+        <div id="obj-modal-body" class="modal-body"></div>
+        <div id="obj-modal-footer" class="modal-footer"></div>
+      </div>
+    </section>
+
+    <!-- ================= PANTALLA DE DERROTA ================= -->
+    <main id="screen-gameover" class="screen hidden">
+      <div class="gameover-card cyber-panel panel-danger">
+        <div class="cyber-tag tag-danger">SIN VIDAS</div>
+        <h2 class="gameover-title">❌ Sistema Comprometido</h2>
+        <p id="gameover-reason" class="gameover-desc">
+          Perdiste tus 3 vidas en esta habitación.
+        </p>
+        <button id="btn-retry-room" class="cyber-btn btn-danger btn-large" type="button">
+          ↻ Reintentar habitación actual
+        </button>
+      </div>
+    </main>
+
+    <!-- ================= PANTALLA FINAL DEL NIVEL 1 (PARA EXPOSICIÓN) ================= -->
+    <main id="screen-stage1-complete" class="screen hidden">
+      <div class="victory-card cyber-panel panel-success">
+        <div class="cyber-tag tag-success">¡HABITACIÓN 1 SUPERADA!</div>
+        <h2 class="victory-title">🔓 Clave obtenida: PHISH</h2>
+
+        <div class="expo-summary-box">
+          <div class="expo-row">
+            <span class="expo-label">¿Qué ataque era?</span>
+            <p class="expo-text"><strong>Phishing:</strong> Correos o memorias USB falsas que imitan a una institución confiable para robar contraseñas.</p>
+          </div>
+          <div class="expo-row">
+            <span class="expo-label">¿Cómo se previene?</span>
+            <p class="expo-text">Verificar siempre el remitente oficial (<code>@unach.mx</code>), inspeccionar el enlace real con la lupa y nunca conectar USB desconocidos.</p>
+          </div>
+        </div>
+
+        <div class="door-summary-box mono-text">
+          <div class="summary-line"><span>Vidas restantes:</span> <strong id="v1-integrity">3 / 3</strong></div>
+          <div class="summary-line"><span>Puntos actuales:</span> <strong id="v1-score">350 / 1000</strong></div>
+        </div>
+
+        <div class="hero-actions">
+          <button id="btn-next-level2" class="cyber-btn btn-primary btn-large" type="button">
+            ▶ Entrar al Nivel 2: Servidor SQL
+          </button>
+          <button id="btn-replay-level1" class="cyber-btn btn-secondary" type="button">
+            ↻ Repetir Nivel 1
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- ================= PANTALLA FINAL DEL NIVEL 2 (PARA EXPOSICIÓN) ================= -->
+    <main id="screen-stage2-complete" class="screen hidden">
+      <div class="victory-card cyber-panel panel-success">
+        <div class="cyber-tag tag-success">¡HABITACIÓN 2 SUPERADA!</div>
+        <h2 class="victory-title">🔓 Clave obtenida: SQLSAFE</h2>
+
+        <div class="expo-summary-box">
+          <div class="expo-row">
+            <span class="expo-label">¿Qué ataque era?</span>
+            <p class="expo-text"><strong>Inyección SQL:</strong> Escribir comandos maliciosos (como <code>' OR '1'='1</code>) en un login para alterar la consulta y entrar sin contraseña.</p>
+          </div>
+          <div class="expo-row">
+            <span class="expo-label">¿Cómo se previene?</span>
+            <p class="expo-text">Usar <strong>consultas parametrizadas</strong> (<code>PREPARE</code> con marcadores <code>?</code>) para que la entrada del usuario nunca se ejecute como código SQL.</p>
+          </div>
+        </div>
+
+        <div class="door-summary-box mono-text">
+          <div class="summary-line"><span>Vidas restantes:</span> <strong id="v2-integrity">3 / 3</strong></div>
+          <div class="summary-line"><span>Puntos actuales:</span> <strong id="v2-score">700 / 1000</strong></div>
+        </div>
+
+        <div class="hero-actions">
+          <button id="btn-next-level3" class="cyber-btn btn-primary btn-large" type="button">
+            ▶ Entrar al Nivel 3: Sala de Acceso (Jefe BRECHA)
+          </button>
+          <button id="btn-replay-level2" class="cyber-btn btn-secondary" type="button">
+            ↻ Repetir Nivel 2
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- ================= PANTALLA FINAL DEL NIVEL 3 (PARA EXPOSICIÓN) ================= -->
+    <main id="screen-stage3-complete" class="screen hidden">
+      <div class="victory-card cyber-panel panel-success">
+        <div class="cyber-tag tag-success">¡JEFE BRECHA DERROTADO!</div>
+        <h2 class="victory-title">🔓 Clave obtenida: ACCESS</h2>
+
+        <div class="expo-summary-box">
+          <div class="expo-row">
+            <span class="expo-label">¿Qué ataque era?</span>
+            <p class="expo-text"><strong>Autenticación débil y Fuerza Bruta:</strong> Probar miles de claves simples (como <code>123456</code> o <code>admin123</code>) por segundo para adivinar el acceso.</p>
+          </div>
+          <div class="expo-row">
+            <span class="expo-label">¿Cómo se previene?</span>
+            <p class="expo-text">Usar <strong>contraseñas largas con mayúsculas, números y símbolos</strong> (<code>M4r!9xP2#</code>) y activar la <strong>Autenticación Multifactor (MFA)</strong>.</p>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          <button id="btn-show-final-victory" class="cyber-btn btn-primary btn-large" type="button">
+            🏆 Ver Pantalla Final de Escape y Rango
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- ================= PANTALLA FINAL DE VICTORIA TOTAL (RESUMEN DE LOS 3 NIVELES) ================= -->
+    <main id="screen-final-victory" class="screen hidden">
+      <div class="victory-card final-victory-card cyber-panel panel-success">
+        <div class="cyber-tag tag-success">¡ESCAPASTE! SISTEMA ASEGURADO ✓</div>
+        <h2 class="victory-title">🏆 AUDITORÍA COMPLETADA</h2>
+        <p class="final-quote">“Sistema asegurado. Has completado la auditoría y escapado.”</p>
+
+        <!-- Claves recolectadas, Dificultad, Puntuación sobre 1000 y Rango (S, A, B, C) -->
+        <div class="final-stats-grid mono-text">
+          <div class="final-stat-box">
+            <span class="stat-box-label">CLAVES OBTENIDAS</span>
+            <div class="final-keys-row">
+              <span class="key-chip unlocked">🔑 PHISH</span>
+              <span class="key-chip unlocked">🔑 SQLSAFE</span>
+              <span class="key-chip unlocked">🔑 ACCESS</span>
+            </div>
+          </div>
+          <div class="final-stat-box">
+            <span class="stat-box-label">DIFICULTAD</span>
+            <strong id="final-difficulty-badge" class="final-difficulty-value">NORMAL (x1)</strong>
+          </div>
+          <div class="final-stat-box">
+            <span class="stat-box-label">PUNTUACIÓN TOTAL</span>
+            <strong id="final-total-score" class="final-big-score">1000 / 1000</strong>
+          </div>
+          <div class="final-stat-box">
+            <span class="stat-box-label">RANGO DE AUDITOR</span>
+            <strong id="final-rank-badge" class="final-rank-badge">S</strong>
+          </div>
+        </div>
+
+        <!-- Tabla / Tarjetas de resumen de los 3 ataques para la exposición -->
+        <div class="final-recap-list">
+          <div class="recap-card recap-cyan">
+            <strong>1. Nivel 1 — Phishing (Clave: PHISH)</strong>
+            <p><span>Ataque:</span> Correos y USB falsos que suplantan a TI para robar claves.</p>
+            <p><span>Prevención:</span> Verificar el dominio oficial (<code>@unach.mx</code>), usar la lupa en enlaces y no conectar USB desconocidos.</p>
+          </div>
+          <div class="recap-card recap-magenta">
+            <strong>2. Nivel 2 — Inyección SQL (Clave: SQLSAFE)</strong>
+            <p><span>Ataque:</span> Inyectar comandos como <code>' OR '1'='1</code> en el login para entrar sin contraseña.</p>
+            <p><span>Prevención:</span> Usar <strong>consultas parametrizadas</strong> (<code>PREPARE</code> y signos <code>?</code>) para separar datos de instrucciones SQL.</p>
+          </div>
+          <div class="recap-card recap-violet">
+            <strong>3. Nivel 3 — Autenticación Débil (Clave: ACCESS)</strong>
+            <p><span>Ataque:</span> Fuerza bruta contra contraseñas predecibles (<code>123456</code>, <code>password</code>).</p>
+            <p><span>Prevención:</span> Crear contraseñas complejas (<code>M4r!9xP2#</code>) y activar la <strong>Autenticación Multifactor (MFA)</strong>.</p>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          <button id="btn-play-again-full" class="cyber-btn btn-primary btn-large" type="button">
+            ↻ Jugar de nuevo desde el Nivel 1
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- ================= MODAL DE PAUSA ================= -->
+    <section id="modal-pause" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
+      <div class="modal-card pause-modal-card cyber-panel">
+        <div class="modal-header">
+          <h2 id="pause-modal-title">⏸ JUEGO EN PAUSA</h2>
+          <button id="btn-close-pause" class="cyber-btn btn-icon" type="button" aria-label="Continuar">✕</button>
+        </div>
+        <div class="modal-body pause-modal-body">
+          <p id="pause-subtitle" class="pause-subtitle mono-text">Simulación congelada — Temporizadores y enemigos detenidos.</p>
+          <div class="pause-menu-actions">
+            <button id="btn-pause-resume" class="cyber-btn btn-primary btn-large" type="button">
+              ▶ Continuar
+            </button>
+            <button id="btn-pause-restart" class="cyber-btn btn-secondary btn-large" type="button">
+              ↻ Reiniciar nivel
+            </button>
+            <button id="btn-pause-audio" class="cyber-btn btn-large" type="button">
+              🔊 Sonido: ACTIVADO
+            </button>
+            <button id="btn-pause-exit" class="cyber-btn btn-danger btn-large" type="button">
+              ⏹ Salir al menú
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= NARRADOR IA (A.R.I.A. — MÁXIMO 2 LÍNEAS, NUNCA SE CORTA) ================= -->
+    <aside id="ai-narrator" class="ai-narrator hidden" aria-live="polite">
+      <div class="ai-avatar">
+        <div class="ai-core"></div>
+        <span class="ai-name mono-text">A.R.I.A.</span>
+      </div>
+      <div class="ai-message-box">
+        <p id="ai-text" class="ai-text">Usa WASD o Flechas para caminar y presiona E cerca de un personaje u objeto.</p>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Scripts modulares separados con funciones y comentarios (rutas relativas sin servidor) -->
+  <script src="./player.js"></script>
+  <script src="./enemies.js"></script>
+  <script src="./levels.js"></script>
+  <script src="./game.js"></script>
+</body>
+</html>
